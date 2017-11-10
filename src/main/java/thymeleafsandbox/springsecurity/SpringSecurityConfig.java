@@ -24,6 +24,8 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @Configuration
 @EnableWebSecurity
@@ -60,11 +62,19 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(final AuthenticationManagerBuilder auth) throws Exception {
+
         auth
                 .inMemoryAuthentication()
-                .withUser("jim").password("demo").roles("ADMIN").and()
-                .withUser("bob").password("demo").roles("USER").and()
-                .withUser("ted").password("demo").roles("USER","ADMIN");
+                .withUser(
+                        User.withDefaultPasswordEncoder()
+                            .username("jim").password("demo").roles("ADMIN").build())
+                .withUser(
+                        User.withDefaultPasswordEncoder()
+                            .username("bob").password("demo").roles("USER").build())
+                .withUser(
+                        User.withDefaultPasswordEncoder()
+                            .username("ted").password("demo").roles("USER","ADMIN").build());
+
     }
 
 
