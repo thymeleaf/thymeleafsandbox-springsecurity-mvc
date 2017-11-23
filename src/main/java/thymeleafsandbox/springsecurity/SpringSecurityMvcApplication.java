@@ -18,15 +18,28 @@ import org.springframework.security.acls.AclPermissionCacheOptimizer;
 import org.springframework.security.acls.AclPermissionEvaluator;
 import org.springframework.security.acls.domain.AclAuthorizationStrategy;
 import org.springframework.security.acls.domain.AclAuthorizationStrategyImpl;
+import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.acls.domain.ConsoleAuditLogger;
 import org.springframework.security.acls.domain.DefaultPermissionGrantingStrategy;
 import org.springframework.security.acls.domain.EhCacheBasedAclCache;
+import org.springframework.security.acls.domain.ObjectIdentityImpl;
+import org.springframework.security.acls.domain.PrincipalSid;
 import org.springframework.security.acls.jdbc.BasicLookupStrategy;
 import org.springframework.security.acls.jdbc.JdbcMutableAclService;
 import org.springframework.security.acls.jdbc.LookupStrategy;
 import org.springframework.security.acls.model.AclCache;
+import org.springframework.security.acls.model.AclService;
+import org.springframework.security.acls.model.MutableAcl;
+import org.springframework.security.acls.model.MutableAclService;
+import org.springframework.security.acls.model.NotFoundException;
+import org.springframework.security.acls.model.ObjectIdentity;
+import org.springframework.security.acls.model.Permission;
+import org.springframework.security.acls.model.Sid;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @SpringBootApplication
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
@@ -40,7 +53,7 @@ public class SpringSecurityMvcApplication {
 
 	@Bean
 	public EhCacheFactoryBean aclEhCacheFactoryBean() {
-		EhCacheFactoryBean ehCacheFactoryBean = new EhCacheFactoryBean();
+		final EhCacheFactoryBean ehCacheFactoryBean = new EhCacheFactoryBean();
 		ehCacheFactoryBean.setCacheManager(aclCacheManager().getObject());
 		ehCacheFactoryBean.setCacheName("aclCache");
 		return ehCacheFactoryBean;
@@ -71,9 +84,8 @@ public class SpringSecurityMvcApplication {
 	}
 
 	@Bean
-	public JdbcMutableAclService aclService(final DataSource dataSource) {
-		JdbcMutableAclService service = new JdbcMutableAclService(dataSource, lookupStrategy(dataSource), aclCache());
-		return service;
+	public MutableAclService aclService(final DataSource dataSource) {
+		return new JdbcMutableAclService(dataSource, lookupStrategy(dataSource), aclCache());
 	}
 
 
@@ -84,7 +96,7 @@ public class SpringSecurityMvcApplication {
 
 	@Bean
 	public MethodSecurityExpressionHandler createExpressionHandler(final DataSource dataSource) {
-		DefaultMethodSecurityExpressionHandler expressionHandler = defaultMethodSecurityExpressionHandler();
+		final DefaultMethodSecurityExpressionHandler expressionHandler = defaultMethodSecurityExpressionHandler();
 		expressionHandler.setPermissionEvaluator(new AclPermissionEvaluator(aclService(dataSource)));
 		expressionHandler.setPermissionCacheOptimizer(new AclPermissionCacheOptimizer(aclService(dataSource)));
 		return expressionHandler;
@@ -93,15 +105,41 @@ public class SpringSecurityMvcApplication {
 
 
 	@Bean
-	public ApplicationRunner runner(final JdbcTemplate jdbcTemplate) {
+	public ApplicationRunner runner(final MutableAclService aclService, final JdbcTemplate jdbcTemplate) {
 
 		return (args -> {
+
+			SecurityContextHolder.getContext().setAuthentication(
+					new UsernamePasswordAuthenticationToken("jim", "demo"));
+
+			final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+			System.out.println(authentication);
+
+			ObjectIdentity oi = new ObjectIdentityImpl("page", Long.valueOf(1));
+			Sid sid = new PrincipalSid("jim");
+			Permission p = BasePermission.ADMINISTRATION;
+
+			// Create or update the relevant ACL
+			MutableAcl acl = null;
+			try {
+				acl = (MutableAcl) aclService.readAclById(oi);
+			} catch (NotFoundException nfe) {
+				acl = aclService.createAcl(oi);
+			}
+
+			// Now grant some permissions via an access control entry (ACE)
+			acl.insertAce(acl.getEntries().size(), p, sid, true);
+			aclService.updateAcl(acl);
+
+
 			final List<Map<String,Object>> result =
 					jdbcTemplate.queryForList(
 							"SELECT table_schema,table_name " +
 							"FROM INFORMATION_SCHEMA.TABLES " +
 							"where table_schema <> 'INFORMATION_SCHEMA' AND table_schema <> 'SYSTEM_LOBS'");
+
 			System.out.println(result);
+
 		});
 
 	}
