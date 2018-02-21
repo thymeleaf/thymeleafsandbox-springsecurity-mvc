@@ -80,6 +80,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <java.version>1.8</java.version>
     <thymeleaf.version>3.0.10-SNAPSHOT</thymeleaf.version>
+    <thymeleaf.extras.springsecurity5.version>3.0.3-SNAPSHOT</thymeleaf.extras.springsecurity5.version>
   </properties>
 
   <dependencies>
@@ -106,7 +107,8 @@
 
     <dependency>
       <groupId>org.thymeleaf.extras</groupId>
-      <artifactId>thymeleaf-extras-springsecurity4</artifactId>
+      <artifactId>thymeleaf-extras-springsecurity5</artifactId>
+      <version>${thymeleaf.extras.springsecurity5.version}</version>
     </dependency>
 
     <dependency>
