@@ -79,8 +79,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <java.version>1.8</java.version>
-    <thymeleaf.version>3.0.11-SNAPSHOT</thymeleaf.version>
-    <thymeleaf-extras-springsecurity5.version>3.0.4-SNAPSHOT</thymeleaf-extras-springsecurity5.version>
+    <thymeleaf.version>3.0.12-SNAPSHOT</thymeleaf.version>
+    <thymeleaf-extras-springsecurity5.version>3.0.4.RELEASE</thymeleaf-extras-springsecurity5.version>
   </properties>
 
   <dependencies>
