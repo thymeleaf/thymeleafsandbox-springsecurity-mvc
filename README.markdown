@@ -2,8 +2,8 @@
 Thymeleaf Sandbox: Spring Security (Spring Boot / Spring MVC version)
 ---------------------------------------------------------------------
 
- This is a version of the SpringSecurity example application based on Spring 5.0
- and Spring Boot 2.0.0. This application uses **Spring MVC** as a web framework.
+ This is a version of the SpringSecurity example application based on Spring 6.0
+ and Spring Boot 3.0.0. This application uses **Spring MVC** as a web framework.
 
  To learn more:
  
